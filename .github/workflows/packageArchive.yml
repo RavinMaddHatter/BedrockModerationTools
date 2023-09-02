@@ -1,23 +1,23 @@
-name: AutoRelease
+name: Release
 on:
   push:
-    branches: [ main ]
+    tags:
+      - '*'
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@main
-    - name: Archive Release
-      uses: thedoctor0/zip-release@0.7.1
-      with:
-        directory: 'BedrockModerationTools'
-        type: 'zip'
-        filename: 'BedrockModerationTools.mcpack'
-        exclusions: '*.git* /*node_modules/* .editorconfig'
-    - name: Upload Release
-    - uses: ncipollo/release-action@v1
-      with:
-          artifacts: 'BedrockModerationTools.mcpack'
+      - uses: actions/checkout@master
+      - name: Create Archive Release
+        uses: thedoctor0/zip-release@master
+        with: 
+          directory: 'BedrockModerationTools'
+          type: 'zip'
+          filename: 'BedrockModerationTools.mcpack'
+          exclusions: '*.git*'
+      - name: Upload Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: 'release.zip'
           token: ${{ secrets.GITHUB_TOKEN }}
-
 
