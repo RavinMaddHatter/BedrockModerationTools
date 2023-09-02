@@ -1,14 +1,21 @@
 name: Create Archive
-on: [push]
+on: 
+  push:
+    tags:
+    - '*'
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@main
     - name: Archive Release
-      uses: thedoctor0/zip-release@0.7.1
+    - uses: thedoctor0/zip-release@0.7.1
+    - uses: ncipollo/release-action@v1
       with:
         type: 'zip'
         directory: "BedrockModerationTools"
         filename: 'BedrockModerationTools.mcpack'
         exclusions: '*.git* /*node_modules/* .editorconfig'
+      with:
+        artifacts: "BedrockModerationTools.mcpack"
+        bodyFile: "body.md"
