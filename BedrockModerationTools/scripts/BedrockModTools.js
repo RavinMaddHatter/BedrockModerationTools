@@ -1,6 +1,5 @@
 import { world, system } from '@minecraft/server';
 import {ActionFormData, ModalFormData,MessageFormData } from "@minecraft/server-ui";
-//test 3 
 
 //////////////////////////////
 ////// Static Forms //////////
@@ -27,7 +26,8 @@ const monitorForm = new ActionFormData()
   .body("What do you need")
   .button("Ticks per Second")
   .button("Player Position")
-  .button("Player Inventory(Not implemented)")
+  .button("Player Inventory")
+  .button("Set Monitoring Rate")
 const adminForm = new ActionFormData()
   .title("Administration Tools")
   .body("What do you need")
@@ -52,6 +52,12 @@ const splashMenu = new MessageFormData()
   .button1("Aknowledge")
   .button2("Don't show me again")
  
+const monitorRateForm = new ModalFormData()
+  .title("Set Monitor Rate")
+  .textField("Monitor Rate ","Seconds")
+//////////////////////////////
+//////// Globals /////////////
+//////////////////////////////
 var startTime = Date.now();
 var modForTPS 
 var activeMonitors = {} 
@@ -62,6 +68,7 @@ var msptStart=0
 var msptStop=0
 var msptArray=[]
 var msptCounter=0
+var monitorRate=20
 
 
 //////////////////////////////
@@ -143,9 +150,7 @@ function openMonitor(moderator){
 				if("tps" in activeMonitors){
 					if (moderator.name in activeMonitors["tps"]["users"]){
 						delete activeMonitors["tps"]["users"][moderator.name]
-						console.warn(!activeMonitors["tps"]["users"])
 						const keys = Object.keys(activeMonitors["tps"]["users"]);
-						console.log(keys.length)
 						if(keys.length==0){
 							system.clearRun(activeMonitors["tps"]["handle"])
 							delete activeMonitors["tps"]
@@ -155,7 +160,6 @@ function openMonitor(moderator){
 					activeMonitors["tps"]={}
 					activeMonitors["tps"]["users"]={}
 					activeMonitors["tps"]["users"][moderator.name]=moderator
-					console.warn(activeMonitors["tps"]["users"])
 					activeMonitors["tps"]["startTime"]=Date.now()
 					if(!("handle" in activeMonitors["tps"])){
 						activeMonitors["tps"]["handle"]=system.runInterval(ticksPerSecondRepeat,ticksAverage)
@@ -166,7 +170,10 @@ function openMonitor(moderator){
 				monitorPlayerLocationForm(moderator)
 				break;
 			case 2://player intentory updates
+				monitorPlayerInvForm(moderator)
 				break;
+			case 3:
+				setMonitorRateForm(moderator)
 			default:
 				break;
 		}
@@ -187,6 +194,7 @@ function openAdmin(moderator){
 		}
 	});
 }
+
 //////////////////////////////
 ////// Form functions ////////
 //////////////////////////////
@@ -235,7 +243,7 @@ function showKickMenu(moderator){
  * @param (player) moderator The moderator that executed the request
  */
 function monitorPlayerLocationForm(moderator){
-	var kickForm = new ModalFormData;
+	var monitorLocForm = new ModalFormData;
 	var names = ["None"]
 	var playerHandle={}
 	let players = world.getPlayers();
@@ -243,8 +251,9 @@ function monitorPlayerLocationForm(moderator){
 		names.push(players[i].name)
 		playerHandle[players[i].name]=players[i]
 	}
-	kickForm.dropdown("Player",names)
-	kickForm.show(moderator).then((r)=>{
+	monitorLocForm.dropdown("Player",names)
+	monitorLocForm.title("Monitor Player")
+	monitorLocForm.show(moderator).then((r)=>{
 		if (r.canceled) return;
 		let [player, reason] = r.formValues;
 		if (!("loc" in activeMonitors)){
@@ -262,10 +271,48 @@ function monitorPlayerLocationForm(moderator){
 			activeMonitors["loc"]["moderator"][moderator.name]={}
 			activeMonitors["loc"]["moderator"][moderator.name]["player"]=playerHandle[names[player]]
 			activeMonitors["loc"]["moderator"][moderator.name]["moderator"]=moderator
-			console.warn("here")
 			if(!("thread" in activeMonitors["loc"])){
-				console.warn("starting thread")
-				activeMonitors["loc"]["thread"]=system.runInterval(repeatMonitorPlayer,20)
+				activeMonitors["loc"]["thread"]=system.runInterval(repeatMonitorPlayer,monitorRate)
+			}
+		}
+	});
+	
+}
+/**
+ * sets up a monitor rule for a player.
+ * @param (player) moderator The moderator that executed the request
+ */
+function monitorPlayerInvForm(moderator){
+	var monPlayerInvForm = new ModalFormData;
+	var names = ["None"]
+	var playerHandle={}
+	let players = world.getPlayers();
+	for (let i = 0; i < players.length; i++){
+		names.push(players[i].name)
+		playerHandle[players[i].name]=players[i]
+	}
+	monPlayerInvForm.title("Monitor Player")
+	monPlayerInvForm.dropdown("Player",names)
+	monPlayerInvForm.show(moderator).then((r)=>{
+		if (r.canceled) return;
+		let [player, reason] = r.formValues;
+		if (!("inv" in activeMonitors)){
+			activeMonitors["inv"]={}
+			activeMonitors["inv"]["moderator"]={}
+		}
+		if (names[player]==="None"){
+			delete activeMonitors["inv"]["moderator"][moderator.name]
+			const keys = Object.keys(activeMonitors["inv"]["moderator"]);
+			if(keys.length==0){
+				system.clearRun(activeMonitors["inv"]["thread"])
+				delete activeMonitors["inv"]
+			}
+		}else{
+			activeMonitors["inv"]["moderator"][moderator.name]={}
+			activeMonitors["inv"]["moderator"][moderator.name]["player"]=playerHandle[names[player]]
+			activeMonitors["inv"]["moderator"][moderator.name]["moderator"]=moderator
+			if(!("thread" in activeMonitors["inv"])){
+				activeMonitors["inv"]["thread"]=system.runInterval(repeatMonitorPlayerInv,monitorRate)
 			}
 		}
 	});
@@ -332,6 +379,19 @@ function teleportFunction(moderator){
 		}
 	});
 }
+/**
+ * Sets the monitor rates
+ * @param (player) moderator The moderator that executed the request
+ */
+function setMonitorRateForm(moderator){
+	monitorRateForm.then((r)=>{
+		if (r.canceled) return;
+		let [seconds] = r.formValues;
+		if (isNumeric(seconds)){
+			monitorRate = parseInt(parseFloat(seconds)/20)
+		}
+	});
+}
 //////////////////////////////
 ////// Action functions //////
 //////////////////////////////
@@ -381,13 +441,13 @@ function getInventories(moderator){
 	for (let i = 0; i < players.length; i++){
 		inventory_text = players[i].name+": "
 		var inventory = players[i].getComponent("inventory");
-		console.warn("here ")
 		for (let slot = 0; slot<36;slot++){
 			var itemStack = inventory.container.getItem(slot);
 			if(!((typeof itemStack) === 'undefined')){
 				inventory_text+=itemStack.type.id + ", "; 
 			}
 		}
+		inventory_text=inventory_text.split("minecraft:").join("")
 		moderator.runCommandAsync("w @s " + inventory_text)
 	}
 	
@@ -429,13 +489,10 @@ function msptMiddle(){
  * RELIES ON GLOBAL VARIABLE INITILAIZATION
  */
 function msptEnd(){
-	//msptArray.push(Date.now()-msptStop)
+	msptArray.push(Date.now()-msptStop)
 	var meanStd= meanAndSTD(msptArray)
-//	msptMod.runCommandAsync("w @s mspt can only be measured in steps of 1ms, averaging provides the decimal places")
 	msptMod.runCommandAsync("w @s average mspt is " +meanStd[1].toFixed(1)+ " standard devation of "+meanStd[0].toFixed(1))
-//	var printVal="MSPT measurements: "+msptArray.toString()
-//	msptMod.runCommandAsync("w @s "+printVal)w
-	console.warn(msptArray.toString())
+
 }
 
 //////////////////////////////
@@ -448,7 +505,6 @@ function msptEnd(){
 function ticksPerSecondRepeat(){
 	if ("tps" in activeMonitors){
 		var ticksPerSecond = 1000 * ticksAverage/(Date.now()-activeMonitors["tps"]["startTime"])
-		//console.warn("running");
 		for (var key in activeMonitors["tps"]["users"]) {
 			activeMonitors["tps"]["users"][key].runCommandAsync("w @s " + ticksPerSecond.toFixed(2))
 		}
@@ -465,6 +521,29 @@ function repeatMonitorPlayer(){
 			var moderator = activeMonitors["loc"]["moderator"][moderatorName]["moderator"]
 			var playerLoc = player.name + ": " + player.dimension.id + " " + player.location.x.toFixed(0)+", " + player.location.y.toFixed(0)+", " + player.location.z.toFixed(0)
 			moderator.runCommandAsync("w @s " + playerLoc)
+		}
+
+	}
+}
+/**
+ * A function to be scheduled that will get the players Inventory and print it to chat
+ */
+function repeatMonitorPlayerInv(){
+	if ("inv" in activeMonitors){
+		for (var moderatorName in activeMonitors["inv"]["moderator"]){ 
+			var player = activeMonitors["inv"]["moderator"][moderatorName]["player"]
+			var moderator = activeMonitors["inv"]["moderator"][moderatorName]["moderator"]
+			var inventory_text = player.name+": "
+			var inventory = player.getComponent("inventory");
+			for (let slot = 0; slot<36;slot++){
+				var itemStack = inventory.container.getItem(slot);
+				if(!((typeof itemStack) === 'undefined')){
+					inventory_text+=itemStack.type.id + ", "; 
+				}
+			}
+			inventory_text=inventory_text.split("minecraft:").join("")
+			moderator.runCommandAsync("w @s " + inventory_text)
+
 		}
 
 	}
