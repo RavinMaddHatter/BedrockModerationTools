@@ -1,8 +1,8 @@
 name: Create Archive
-on: 
+on:
   push:
-    tags:
-    - '*'
+    branches: [ main ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -10,12 +10,25 @@ jobs:
     - uses: actions/checkout@main
     - name: Archive Release
     - uses: thedoctor0/zip-release@0.7.1
-    - uses: ncipollo/release-action@v1
       with:
         type: 'zip'
         directory: "BedrockModerationTools"
         filename: 'BedrockModerationTools.mcpack'
         exclusions: '*.git* /*node_modules/* .editorconfig'
-      with:
-        artifacts: "BedrockModerationTools.mcpack"
-        bodyFile: "body.md"
+  release:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - uses: actions/checkout@main
+      - uses: CupOfTea696/gh-action-auto-release@v1.0.0
+        with:
+          title: "Release: $version"
+          tag: "v$semver"
+          draft: false
+          regex: "/^Release: #{semver}$/i"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
