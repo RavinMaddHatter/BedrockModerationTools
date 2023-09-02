@@ -4,36 +4,7 @@ import {ActionFormData, ModalFormData,MessageFormData } from "@minecraft/server-
 //////////////////////////////
 ////// Static Forms //////////
 //////////////////////////////
-const mainForm = new ActionFormData()
-  .title("Moderator Tools")
-  .body("What do you need")
-  .button("Inspect")
-  .button("Monitor")
-  .button("Administrate")
-const inspectForm = new ActionFormData()
-  .title("Inspection Tools")
-  .body("What do you need")
-  .button("Spectator")
-  .button("Teleport")
-  .button("Ticks Per Second")
-  .button("Get Player Location")
-  .button("Get Player Inventory")
-  .button("Teleport to player")
-  .button("Stealth Teleport to player")
-  .button("MSPT")
-const monitorForm = new ActionFormData()
-  .title("Monitoring Tools")
-  .body("What do you need")
-  .button("Ticks per Second")
-  .button("Player Position")
-  .button("Player Inventory")
-  .button("Set Monitoring Rate")
-const adminForm = new ActionFormData()
-  .title("Administration Tools")
-  .body("What do you need")
-  .button("Kick")
-  .button("Allow List")
-  .button("setup moderators(Not implemented)")
+
 const allowListform = new ModalFormData()
   .title("Administration Tools")
   .textField("Username","enter user name")
@@ -46,11 +17,7 @@ const teleport = new ModalFormData()
   .textField("Y","location Y")
   .textField("Z","location Z")
   
-const splashMenu = new MessageFormData()
-  .title("Welcome")
-  .body("This is a user owned server and we are required to inform you:\n\r\n\rTHIS SERVER IS NOT AN OFFICIAL MINECRAFT SERVER. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT")
-  .button1("Aknowledge")
-  .button2("Don't show me again")
+
  
 const monitorRateForm = new ModalFormData()
   .title("Set Monitor Rate")
@@ -69,7 +36,7 @@ var msptStop=0
 var msptArray=[]
 var msptCounter=0
 var monitorRate=20
-
+	
 
 //////////////////////////////
 ////// Subscriptions /////////
@@ -83,17 +50,33 @@ world.afterEvents.playerSpawn.subscribe(event =>{
 });
 
 world.afterEvents.itemUse.subscribe(event => {
-	if (event.itemStack.typeId === "minecraft:stick" && event.itemStack.nameTag === "mod") {
+	if (event.itemStack.typeId === "minecraft:stick" && event.itemStack.nameTag === "mod" && (event.source.hasTag("menuAccess")||event.source.hasTag("root"))) {
+		var buttons = []
+		if(event.source.hasTag("mod")||event.source.hasTag("inspect")||event.source.hasTag("teleport")||event.source.hasTag("spectatorOkay")||event.source.hasTag("root")){
+			buttons.push("Inspect")
+		}
+		if(event.source.hasTag("monitor")||event.source.hasTag("root")){
+			buttons.push("Monitor")
+		}
+		if(event.source.hasTag("admin")||event.source.hasTag("allowList")||event.source.hasTag("root")){
+			buttons.push("Administrate")
+		}
+		let mainForm = new ActionFormData()
+		mainForm.title("Moderator Tools")
+		mainForm.body("What do you need")
+		for (const text of buttons){
+			mainForm.button(text)
+		}
 		var nextForm = 99;
 		mainForm.show(event.source).then((response) => {
-			switch(response.selection){
-				case 0://Inspect
+			switch(buttons[response.selection]){
+				case "Inspect"://Inspect
 					openInspect(event.source)
 					break;
-				case 1://Monitor
+				case "Monitor"://Monitor
 					openMonitor(event.source)
 					break;
-				case 2://Admin
+				case "Administrate"://Admin
 					openAdmin(event.source)
 					break;
 				default:
@@ -104,32 +87,59 @@ world.afterEvents.itemUse.subscribe(event => {
 });
 
 function openInspect(moderator){
+	let inspectForm = new ActionFormData()
+	var buttons = []
+	inspectForm.title("Inspection Tools")
+	inspectForm.body("What do you need")
+	if(moderator.hasTag("mod")||moderator.hasTag("root")){
+		buttons.push("Ticks Per Second")
+		buttons.push("MSPT")
+	}
+	
+	if(moderator.hasTag("spectatorOkay")||moderator.hasTag("root")){
+		buttons.push("Spectator")
+	}
+	if(moderator.hasTag("teleport")||moderator.hasTag("root")){
+		buttons.push("Teleport to player")
+		buttons.push("Teleport")
+	}
+	if ((moderator.hasTag("teleport")&&moderator.hasTag("spectator"))||moderator.hasTag("root")){
+		("Stealth Teleport to player")
+	}
+	if(moderator.hasTag("inspect")||moderator.hasTag("root")){
+		buttons.push("Get Player Location")
+		buttons.push("Get Player Inventory")
+	}
+	for(const text of buttons){
+		inspectForm.button(text)
+	}
+	
 	inspectForm.show(moderator).then((response) =>{
-		switch(response.selection){
-			case 0://spectator
+		switch(buttons[response.selection]){
+			case "Spectator"://spectator
 				enterSpectator(moderator);
 				break;
-			case 1://Teleport
+			case "Teleport"://Teleport
 				teleportFunction(moderator);
 				break;
-			case 2://TPS
+			case "Ticks Per Second"://TPS
 				modForTPS=moderator;
 				startTime = Date.now();
 				system.runTimeout(ticksPerSecond,ticksAverage);
 				break;// get locations
-			case 3:
+			case "Get Player Location":
 				getPlayerLocation(moderator);
 				break;
-			case 4:// get inventories
+			case "Get Player Inventory":// get inventories
 				getInventories(moderator);
 				break;
-			case 5://tp to player
+			case "Teleport to player"://tp to player
 				tpToPlayerShow(moderator);
 				break;
-			case 6://stealth tp to player
+			case "Stealth Teleport to player"://stealth tp to player
 				stealthTpToPlayerShow(moderator);
 				break;
-			case 7:
+			case "MSPT":
 				msptStart=Date.now()
 				msptStop=Date.now()
 				msptCounter=0;
@@ -144,50 +154,81 @@ function openInspect(moderator){
 
 
 function openMonitor(moderator){
-		monitorForm.show(moderator).then((response) =>{
-		switch(response.selection){
-			case 0://TPS continous
-				if("tps" in activeMonitors){
-					if (moderator.name in activeMonitors["tps"]["users"]){
-						delete activeMonitors["tps"]["users"][moderator.name]
-						const keys = Object.keys(activeMonitors["tps"]["users"]);
-						if(keys.length==0){
-							system.clearRun(activeMonitors["tps"]["handle"])
-							delete activeMonitors["tps"]
-						}
-					}
-				}else{
-					activeMonitors["tps"]={}
-					activeMonitors["tps"]["users"]={}
-					activeMonitors["tps"]["users"][moderator.name]=moderator
-					activeMonitors["tps"]["startTime"]=Date.now()
-					if(!("handle" in activeMonitors["tps"])){
-						activeMonitors["tps"]["handle"]=system.runInterval(ticksPerSecondRepeat,ticksAverage)
+	var buttons=[]
+	let monitorForm = new ActionFormData()
+	monitorForm.title("Monitoring Tools")
+	monitorForm.body("What do you need")
+	buttons.push("Ticks per Second")
+	if(moderator.hasTag("inspect")||moderator.hasTag("root")){
+		buttons.push("Player Position")
+		buttons.push("Player Inventory")
+	}
+	buttons.push("Set Monitoring Rate")
+	for(const text of buttons){
+		monitorForm.button(text)
+	}
+	monitorForm.show(moderator).then((response) =>{
+	switch(buttons[response.selection]){
+		case "Ticks per Second"://TPS continous
+			if("tps" in activeMonitors){
+				if (moderator.name in activeMonitors["tps"]["users"]){
+					delete activeMonitors["tps"]["users"][moderator.name]
+					const keys = Object.keys(activeMonitors["tps"]["users"]);
+					if(keys.length==0){
+						system.clearRun(activeMonitors["tps"]["handle"])
+						delete activeMonitors["tps"]
 					}
 				}
-				break;
-			case 1:// player position repeat
-				monitorPlayerLocationForm(moderator)
-				break;
-			case 2://player intentory updates
-				monitorPlayerInvForm(moderator)
-				break;
-			case 3:
-				setMonitorRateForm(moderator)
-			default:
-				break;
-		}
-			
+			}else{
+				activeMonitors["tps"]={}
+				activeMonitors["tps"]["users"]={}
+				activeMonitors["tps"]["users"][moderator.name]=moderator
+				activeMonitors["tps"]["startTime"]=Date.now()
+				if(!("handle" in activeMonitors["tps"])){
+					activeMonitors["tps"]["handle"]=system.runInterval(ticksPerSecondRepeat,ticksAverage)
+				}
+			}
+			break;
+		case "Player Position":// player position repeat
+			monitorPlayerLocationForm(moderator)
+			break;
+		case "Player Inventory"://player intentory updates
+			monitorPlayerInvForm(moderator)
+			break;
+		case "Set Monitoring Rate":
+			setMonitorRateForm(moderator)
+		default:
+			break;
+	}		
 	});
 }
 function openAdmin(moderator){
+	var buttons=[]
+	let adminForm = new ActionFormData()
+	adminForm.title("Administration Tools")
+	adminForm.body("What do you need")
+	if(moderator.hasTag("admin")||moderator.hasTag("root")){
+		buttons.push("Kick")
+	}
+	if(moderator.hasTag("allowList")||moderator.hasTag("root")){
+		buttons.push("Allow List")
+	}
+	if(moderator.hasTag("root")){
+		buttons.push("Setup Moderators")
+	}
+	for(const text of buttons){
+		adminForm.button(text)
+	}
 	adminForm.show(moderator).then((response) =>{
-		switch(response.selection){
-			case 0://kick
+		switch(buttons[response.selection]){
+			case "Kick"://kick
 				showKickMenu(moderator)
 				break;
-			case 1://allow list add
+			case "Allow List"://allow list add
 				allowListAdd(moderator)
+				break;
+			case "Setup Moderators":
+				showPermissionsForm(moderator)
 				break;
 			default:
 				break;
@@ -200,20 +241,27 @@ function openAdmin(moderator){
 //////////////////////////////
 
 function showSplash(event){
+	
 	if(!event.player.hasTag("hasPlayed")){
 		latestJoin=event.player
 		system.runTimeout(showSplashMenu,200)
 	}
 }
 function showSplashMenu(){
+	var buttons=["Acknowledge","Don't show me again"]
+	const splashMenu = new MessageFormData()
+		.title("Welcome")
+		.body("This is a user owned server and we are required to inform you:\n\r\n\rTHIS SERVER IS NOT AN OFFICIAL MINECRAFT SERVER. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT")
+		.button1(buttons[0])
+		.button2(buttons[1])
 	splashMenu.show(latestJoin).then(r =>{
 		if (r.canceled){
 			return;
 		}
-		switch(r.selection){
-			case 0:
+		switch(buttons[r.selection]){
+			case "Acknowledge":
 				break;
-			case 1:
+			case "Don't show me again":
 				latestJoin.addTag("hasPlayed");
 				break;
 			default:
@@ -237,6 +285,59 @@ function showKickMenu(moderator){
 		moderator.runCommandAsync(`kick "${names[player]}" ${reason}`);
 	});
 	
+}
+
+function showPermissionsForm(moderator){
+	var names = []
+	let permissionForm = new ModalFormData()
+	permissionForm.title("Select player to Manage")
+	var playerHandle={}
+	let players = world.getPlayers();
+	for (let i = 0; i < players.length; i++){
+		names.push(players[i].name)
+		playerHandle[players[i].name]=players[i]
+	}
+	permissionForm.dropdown("Player",names)
+	permissionForm.show(moderator).then((r)=>{
+		if (r.canceled) return;
+		let [player] = r.formValues;
+		showPlayerPermissionsForm(moderator,playerHandle[names[player]])
+		
+	});
+}
+function showPlayerPermissionsForm(moderator,player){
+	var tags= 	[["Access Everything (including permissions)","root"],
+				 ["Moderation Basic", "mod"],
+				 ["Inspect Players","inspect"],
+				 ["Teleport","teleport"],
+				 ["Spectator","spectatorOkay"],
+				 ["Monitor ","monitor"],
+				 ["Kick","admin"],
+				 ["Allow List","allowList"]]
+	let playerPerm = new ModalFormData()
+	playerPerm.title(player.name)
+	for( const setting of tags){
+		playerPerm.toggle(setting[0],player.hasTag(setting[1]))
+	}
+	var menuAccess=false
+	playerPerm.show(moderator).then((r)=>{
+		if (r.canceled) return;
+		let settings = r.formValues;
+		for(const i in settings){
+			if(settings[i]){
+				menuAccess=true
+				player.addTag(tags[i][1])
+			}else{
+				player.removeTag(tags[i][1])
+			}
+		}
+		if(menuAccess){
+			player.addTag("menuAccess")
+		}else{
+			player.removeTag("menuAccess")
+			
+		}
+	});
 }
 /**
  * Displays form for monitoring a player then loops
