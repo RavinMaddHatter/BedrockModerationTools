@@ -1,18 +1,17 @@
-name: Create Archive
+name: AutoRelease
 on:
   push:
-    branches: [ main ]
-
+    branches: [ master ]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@main
     - name: Archive Release
-    - uses: thedoctor0/zip-release@0.7.1
+      uses: thedoctor0/zip-release@0.7.1
       with:
+        directory: 'BedrockModerationTools'
         type: 'zip'
-        directory: "BedrockModerationTools"
         filename: 'BedrockModerationTools.mcpack'
         exclusions: '*.git* /*node_modules/* .editorconfig'
   release:
