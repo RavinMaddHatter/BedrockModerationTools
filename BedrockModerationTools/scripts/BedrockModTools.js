@@ -25,10 +25,11 @@ const monitorRateForm = new ModalFormData()
 //////////////////////////////
 //////// Globals /////////////
 //////////////////////////////
+
+const ticksAverage = 20
 var startTime = Date.now();
 var modForTPS 
 var activeMonitors = {} 
-const ticksAverage = 20
 var latestJoin 
 var msptMod
 var msptStart=0
@@ -50,8 +51,11 @@ world.afterEvents.playerSpawn.subscribe(event =>{
 });
 
 world.afterEvents.itemUse.subscribe(event => {
-	if (event.itemStack.typeId === "minecraft:stick" && event.itemStack.nameTag === "mod" && (event.source.hasTag("menuAccess")||event.source.hasTag("root"))) {
-		var buttons = []
+	if (event.itemStack.typeId === "minecraft:stick" && event.itemStack.nameTag === "menu" && (event.source.hasTag("menuAccess")||event.source.hasTag("root"))) {
+		let buttons = []
+		if(event.source.hasTag("teleport")||event.source.hasTag("effects")||event.source.hasTag("spectatorOkay")||event.source.hasTag("root")){
+			buttons.push("Effects/TP")
+		}
 		if(event.source.hasTag("mod")||event.source.hasTag("inspect")||event.source.hasTag("teleport")||event.source.hasTag("spectatorOkay")||event.source.hasTag("root")){
 			buttons.push("Inspect")
 		}
@@ -67,9 +71,12 @@ world.afterEvents.itemUse.subscribe(event => {
 		for (const text of buttons){
 			mainForm.button(text)
 		}
-		var nextForm = 99;
+		let nextForm = 99;
 		mainForm.show(event.source).then((response) => {
 			switch(buttons[response.selection]){
+				case "Effects/TP":
+					openEffectsForm(event.source)
+					break;
 				case "Inspect"://Inspect
 					openInspect(event.source)
 					break;
@@ -86,35 +93,31 @@ world.afterEvents.itemUse.subscribe(event => {
 	}
 });
 
-function openInspect(moderator){
-	let inspectForm = new ActionFormData()
-	var buttons = []
-	inspectForm.title("Inspection Tools")
-	inspectForm.body("What do you need")
-	if(moderator.hasTag("mod")||moderator.hasTag("root")){
-		buttons.push("Ticks Per Second")
-		buttons.push("MSPT")
-	}
+function openEffectsForm(moderator){
+	let effectsForm = new ActionFormData()
+	let buttons = []
+	effectsForm.title("Effect Tools")
+	effectsForm.body("What do you need")
 	
 	if(moderator.hasTag("spectatorOkay")||moderator.hasTag("root")){
 		buttons.push("Spectator")
 	}
 	if(moderator.hasTag("teleport")||moderator.hasTag("root")){
-		buttons.push("Teleport to player")
 		buttons.push("Teleport")
+		buttons.push("Teleport to player")
 	}
-	if ((moderator.hasTag("teleport")&&moderator.hasTag("spectator"))||moderator.hasTag("root")){
-		("Stealth Teleport to player")
+	if ((moderator.hasTag("teleport")&&moderator.hasTag("spectatorOkay"))||moderator.hasTag("root")){
+		buttons.push("Stealth Teleport to player")
 	}
-	if(moderator.hasTag("inspect")||moderator.hasTag("root")){
-		buttons.push("Get Player Location")
-		buttons.push("Get Player Inventory")
+	if ((moderator.hasTag("effects")||moderator.hasTag("root"))){
+		buttons.push("Effects")
 	}
+
 	for(const text of buttons){
-		inspectForm.button(text)
+		effectsForm.button(text)
 	}
 	
-	inspectForm.show(moderator).then((response) =>{
+	effectsForm.show(moderator).then((response) =>{
 		switch(buttons[response.selection]){
 			case "Spectator"://spectator
 				enterSpectator(moderator);
@@ -122,6 +125,43 @@ function openInspect(moderator){
 			case "Teleport"://Teleport
 				teleportFunction(moderator);
 				break;
+			case "Teleport to player"://tp to player
+				tpToPlayerShow(moderator);
+				break;
+			case "Stealth Teleport to player"://stealth tp to player
+				stealthTpToPlayerShow(moderator);
+				break;
+			case "Effects"://stealth tp to player
+				showEffectGiveMenue(moderator);
+				break;
+			default:
+				break;
+		}
+	});
+}
+
+
+function openInspect(moderator){
+	let inspectForm = new ActionFormData()
+	let buttons = []
+	inspectForm.title("Inspection Tools")
+	inspectForm.body("What do you need")
+	if(moderator.hasTag("mod")||moderator.hasTag("root")){
+		buttons.push("Ticks Per Second")
+		buttons.push("MSPT")
+	}
+	
+	if(moderator.hasTag("inspect")||moderator.hasTag("root")){
+		buttons.push("Get Player Location")
+		buttons.push("Get Player Inventory")
+		buttons.push("Get Mobs")
+	}
+	for(const text of buttons){
+		inspectForm.button(text)
+	}
+	
+	inspectForm.show(moderator).then((response) =>{
+		switch(buttons[response.selection]){
 			case "Ticks Per Second"://TPS
 				modForTPS=moderator;
 				startTime = Date.now();
@@ -136,9 +176,6 @@ function openInspect(moderator){
 			case "Teleport to player"://tp to player
 				tpToPlayerShow(moderator);
 				break;
-			case "Stealth Teleport to player"://stealth tp to player
-				stealthTpToPlayerShow(moderator);
-				break;
 			case "MSPT":
 				msptStart=Date.now()
 				msptStop=Date.now()
@@ -146,6 +183,8 @@ function openInspect(moderator){
 				msptArray=[];
 				msptMod=moderator;
 				msptRouter();
+			case "Get Mobs":
+				getMobsFunction(moderator);
 			default:
 				break;
 		}
@@ -154,7 +193,7 @@ function openInspect(moderator){
 
 
 function openMonitor(moderator){
-	var buttons=[]
+	let buttons=[]
 	let monitorForm = new ActionFormData()
 	monitorForm.title("Monitoring Tools")
 	monitorForm.body("What do you need")
@@ -203,7 +242,7 @@ function openMonitor(moderator){
 	});
 }
 function openAdmin(moderator){
-	var buttons=[]
+	let buttons=[]
 	let adminForm = new ActionFormData()
 	adminForm.title("Administration Tools")
 	adminForm.body("What do you need")
@@ -239,6 +278,35 @@ function openAdmin(moderator){
 //////////////////////////////
 ////// Form functions ////////
 //////////////////////////////
+/**
+ * Displays form for kicking a player then executes the kick command when completed.
+ * @param (player) moderator The moderator that executed the request
+ */
+function showEffectGiveMenue(moderator){
+	let effectForm = new ModalFormData();
+	let names = world.getPlayers().map((player) => player.name);
+	let effectsNames =	["Clear", "Night Vision","Invisibility"]
+	effectForm.title("Give Effect")
+	effectForm.dropdown("Effect",effectsNames)
+	effectForm.show(moderator).then((r)=>{
+		if (r.canceled) return;
+		let [effectIndex] = r.formValues;
+		switch (effectsNames[effectIndex]){
+			case "Clear":
+				moderator.runCommandAsync("effect @s clear")
+				break;
+			case "Night Vision":
+				moderator.runCommandAsync("effect @s night_vision 3600 1 true")
+				break;
+			case "Invisibility":
+				moderator.runCommandAsync("effect @s invisibility 3600 1 true")
+				break;
+			default:
+				break;
+		}
+	});
+	
+}
 
 function showSplash(event){
 	
@@ -248,7 +316,7 @@ function showSplash(event){
 	}
 }
 function showSplashMenu(){
-	var buttons=["Acknowledge","Don't show me again"]
+	let buttons=["Acknowledge","Don't show me again"]
 	const splashMenu = new MessageFormData()
 		.title("Welcome")
 		.body("This is a user owned server and we are required to inform you:\n\r\n\rTHIS SERVER IS NOT AN OFFICIAL MINECRAFT SERVER. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT")
@@ -288,10 +356,10 @@ function showKickMenu(moderator){
 }
 
 function showPermissionsForm(moderator){
-	var names = []
+	let names = []
 	let permissionForm = new ModalFormData()
 	permissionForm.title("Select player to Manage")
-	var playerHandle={}
+	let playerHandle={}
 	let players = world.getPlayers();
 	for (let i = 0; i < players.length; i++){
 		names.push(players[i].name)
@@ -306,11 +374,12 @@ function showPermissionsForm(moderator){
 	});
 }
 function showPlayerPermissionsForm(moderator,player){
-	var tags= 	[["Access Everything (including permissions)","root"],
+	let tags= 	[["Access Everything (including permissions)","root"],
 				 ["Moderation Basic", "mod"],
 				 ["Inspect Players","inspect"],
 				 ["Teleport","teleport"],
 				 ["Spectator","spectatorOkay"],
+				 ["Effects","effects"],
 				 ["Monitor ","monitor"],
 				 ["Kick","admin"],
 				 ["Allow List","allowList"]]
@@ -319,7 +388,7 @@ function showPlayerPermissionsForm(moderator,player){
 	for( const setting of tags){
 		playerPerm.toggle(setting[0],player.hasTag(setting[1]))
 	}
-	var menuAccess=false
+	let menuAccess=false
 	playerPerm.show(moderator).then((r)=>{
 		if (r.canceled) return;
 		let settings = r.formValues;
@@ -344,9 +413,9 @@ function showPlayerPermissionsForm(moderator,player){
  * @param (player) moderator The moderator that executed the request
  */
 function monitorPlayerLocationForm(moderator){
-	var monitorLocForm = new ModalFormData;
-	var names = ["None"]
-	var playerHandle={}
+	let monitorLocForm = new ModalFormData;
+	let names = ["None"]
+	let playerHandle={}
 	let players = world.getPlayers();
 	for (let i = 0; i < players.length; i++){
 		names.push(players[i].name)
@@ -384,9 +453,9 @@ function monitorPlayerLocationForm(moderator){
  * @param (player) moderator The moderator that executed the request
  */
 function monitorPlayerInvForm(moderator){
-	var monPlayerInvForm = new ModalFormData;
-	var names = ["None"]
-	var playerHandle={}
+	let monPlayerInvForm = new ModalFormData;
+	let names = ["None"]
+	let playerHandle={}
 	let players = world.getPlayers();
 	for (let i = 0; i < players.length; i++){
 		names.push(players[i].name)
@@ -424,7 +493,7 @@ function monitorPlayerInvForm(moderator){
  * @param (player) moderator The moderator that executed the request
  */
 function tpToPlayerShow(moderator){
-	var tpForm = new ModalFormData;
+	let tpForm = new ModalFormData;
 	let names = world.getPlayers().map((player) => player.name);
 	tpForm.dropdown("Player",names)
 	tpForm.show(moderator).then((r)=>{
@@ -435,7 +504,7 @@ function tpToPlayerShow(moderator){
 }
 
 function stealthTpToPlayerShow(moderator){
-	var tpForm = new ModalFormData;
+	let tpForm = new ModalFormData;
 	let names = world.getPlayers().map((player) => player.name);
 	tpForm.dropdown("Player",names)
 	tpForm.show(moderator).then((r)=>{
@@ -504,7 +573,7 @@ function setMonitorRateForm(moderator){
 */
 function getPlayerLocation(moderator){
 	let players = world.getPlayers();
-	var playerLoc
+	let playerLoc
 	
 	for (let i = 0; i < players.length; i++){
 		playerLoc = players[i].name + ": " + players[i].dimension.id + " " + players[i].location.x.toFixed(0)+", " + players[i].location.y.toFixed(0)+", " + players[i].location.z.toFixed(0)
@@ -538,12 +607,12 @@ function removeSpectator(event){
 */
 function getInventories(moderator){
 	let players = world.getPlayers();
-	var inventory_text = ""
+	let inventory_text = ""
 	for (let i = 0; i < players.length; i++){
 		inventory_text = players[i].name+": "
-		var inventory = players[i].getComponent("inventory");
+		let inventory = players[i].getComponent("inventory");
 		for (let slot = 0; slot<36;slot++){
-			var itemStack = inventory.container.getItem(slot);
+			let itemStack = inventory.container.getItem(slot);
 			if(!((typeof itemStack) === 'undefined')){
 				inventory_text+=itemStack.type.id + ", "; 
 			}
@@ -557,7 +626,7 @@ function getInventories(moderator){
  * Function to be executed on an delay of ticksAverage to enable testing of lag on the server. 20 ticks should occur per second.
  */
 function ticksPerSecond(){
-	var ticksPerSecond = 1000 * ticksAverage/(Date.now()-startTime)
+	let ticksPerSecond = 1000 * ticksAverage/(Date.now()-startTime)
 	modForTPS.runCommandAsync("w @s " + ticksPerSecond.toFixed(2))
 }
 /**
@@ -591,9 +660,70 @@ function msptMiddle(){
  */
 function msptEnd(){
 	msptArray.push(Date.now()-msptStop)
-	var meanStd= meanAndSTD(msptArray)
+	let meanStd= meanAndSTD(msptArray)
 	msptMod.runCommandAsync("w @s average mspt is " +meanStd[1].toFixed(1)+ " standard devation of "+meanStd[0].toFixed(1))
 
+}
+/**
+ * Prints all mobs, types, and counts to chat per dimnesion and per player
+ * @param (player) moderator The moderator that executed the request
+*/
+function getMobsFunction(moderator){
+	moderator.runCommandAsync('w @s Overworld: '+getEntitiesDimension("minecraft:overworld"))
+	moderator.runCommandAsync('w @s Nether: '+getEntitiesDimension("minecraft:nether"))
+	moderator.runCommandAsync('w @s The End: '+getEntitiesDimension("minecraft:the_end"))
+	getMobsNearPlayers(moderator)
+}
+/**
+ * returns a print statemnt for a dimension 
+ * @param (dim) Dimension ID such as "minecraft:overworld"
+*/
+function getEntitiesDimension(dim){
+	const dimension = world.getDimension(dim);
+	const dimensionEntities = dimension.getEntities()
+	let dimensionEntityTypes={}
+	for(const entity of dimensionEntities){
+		if (entity.dimension.id ===dim){
+			if(!(entity.typeId in dimensionEntityTypes)){
+				dimensionEntityTypes[entity.typeId] = 0		}
+			dimensionEntityTypes[entity.typeId]++
+		}
+	}
+	let dimensionPrint=""
+	for (const [name, count] of Object.entries(dimensionEntityTypes)) {
+		dimensionPrint=dimensionPrint+' '+count+'x'+name+', '
+	}
+	dimensionPrint=dimensionPrint.split("minecraft:").join("")
+	return dimensionPrint;
+}
+/**
+ * Prints all mobs around each player.
+ * @param (player) moderator The moderator that executed the request
+*/
+function getMobsNearPlayers(moderator){
+	let players = world.getPlayers()
+	for(const player of players){
+		const dimension = world.getDimension(player.dimension.id);
+		const dimensionEntities = dimension.getEntities({
+			location: player.location,
+			maxDistance: 128,
+			})
+		let playerEntityTypes={}
+		let mobsPrint=""
+		for(const entity of dimensionEntities){
+			if ((entity.dimension.id ===player.dimension.id) &&(entity.typeId)!="minecraft:player"){
+				if(!(entity.typeId in playerEntityTypes)){
+					playerEntityTypes[entity.typeId] = 0		
+				}
+				playerEntityTypes[entity.typeId]++
+			}
+		}
+		for (const [name, count] of Object.entries(playerEntityTypes)) {
+			mobsPrint=mobsPrint+' '+count+'x'+name+', '
+		}
+		mobsPrint=mobsPrint.split("minecraft:").join("")
+		moderator.runCommandAsync("w @s " + player.name+": "+mobsPrint)
+	}
 }
 
 //////////////////////////////
@@ -605,8 +735,8 @@ function msptEnd(){
  */
 function ticksPerSecondRepeat(){
 	if ("tps" in activeMonitors){
-		var ticksPerSecond = 1000 * ticksAverage/(Date.now()-activeMonitors["tps"]["startTime"])
-		for (var key in activeMonitors["tps"]["users"]) {
+		let ticksPerSecond = 1000 * ticksAverage/(Date.now()-activeMonitors["tps"]["startTime"])
+		for (let key in activeMonitors["tps"]["users"]) {
 			activeMonitors["tps"]["users"][key].runCommandAsync("w @s " + ticksPerSecond.toFixed(2))
 		}
 		activeMonitors["tps"]["startTime"]=Date.now()
@@ -617,10 +747,10 @@ function ticksPerSecondRepeat(){
  */
 function repeatMonitorPlayer(){
 	if ("loc" in activeMonitors){
-		for (var moderatorName in activeMonitors["loc"]["moderator"]){ 
-			var player = activeMonitors["loc"]["moderator"][moderatorName]["player"]
-			var moderator = activeMonitors["loc"]["moderator"][moderatorName]["moderator"]
-			var playerLoc = player.name + ": " + player.dimension.id + " " + player.location.x.toFixed(0)+", " + player.location.y.toFixed(0)+", " + player.location.z.toFixed(0)
+		for (let moderatorName in activeMonitors["loc"]["moderator"]){ 
+			let player = activeMonitors["loc"]["moderator"][moderatorName]["player"]
+			let moderator = activeMonitors["loc"]["moderator"][moderatorName]["moderator"]
+			let playerLoc = player.name + ": " + player.dimension.id + " " + player.location.x.toFixed(0)+", " + player.location.y.toFixed(0)+", " + player.location.z.toFixed(0)
 			moderator.runCommandAsync("w @s " + playerLoc)
 		}
 
@@ -631,13 +761,13 @@ function repeatMonitorPlayer(){
  */
 function repeatMonitorPlayerInv(){
 	if ("inv" in activeMonitors){
-		for (var moderatorName in activeMonitors["inv"]["moderator"]){ 
-			var player = activeMonitors["inv"]["moderator"][moderatorName]["player"]
-			var moderator = activeMonitors["inv"]["moderator"][moderatorName]["moderator"]
-			var inventory_text = player.name+": "
-			var inventory = player.getComponent("inventory");
+		for (let moderatorName in activeMonitors["inv"]["moderator"]){ 
+			let player = activeMonitors["inv"]["moderator"][moderatorName]["player"]
+			let moderator = activeMonitors["inv"]["moderator"][moderatorName]["moderator"]
+			let inventory_text = player.name+": "
+			let inventory = player.getComponent("inventory");
 			for (let slot = 0; slot<36;slot++){
-				var itemStack = inventory.container.getItem(slot);
+				let itemStack = inventory.container.getItem(slot);
 				if(!((typeof itemStack) === 'undefined')){
 					inventory_text+=itemStack.type.id + ", "; 
 				}
