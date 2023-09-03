@@ -172,6 +172,7 @@ function openInspect(moderator){
 				msptArray=[];
 				msptMod=moderator;
 				msptRouter();
+				break;
 			case "Get Mobs":
 				getMobsFunction(moderator);
 			default:
@@ -573,7 +574,7 @@ function getPlayerLocation(moderator){
 	let playerLoc
 	
 	for (let i = 0; i < players.length; i++){
-		playerLoc = players[i].name + ": " + players[i].dimension.id + " " + players[i].location.x.toFixed(0)+", " + players[i].location.y.toFixed(0)+", " + players[i].location.z.toFixed(0)
+		playerLoc ="\u00A74" + players[i].name + ": \u00A7a" + players[i].dimension.id + "\u00A7f " + players[i].location.x.toFixed(0)+", " + players[i].location.y.toFixed(0)+", " + players[i].location.z.toFixed(0)
 		
 		sayInChat(moderator, playerLoc)
 	}
@@ -606,7 +607,7 @@ function getInventories(moderator){
 	let players = world.getPlayers();
 	let inventory_text = ""
 	for (let i = 0; i < players.length; i++){
-		inventory_text = players[i].name+": "
+		inventory_text = "\u00A74"+players[i].name+": \u00A7f"
 		let inventory = players[i].getComponent("inventory");
 		for (let slot = 0; slot<36;slot++){
 			let itemStack = inventory.container.getItem(slot);
@@ -622,8 +623,8 @@ function getInventories(moderator){
  * Function to be executed on an delay of ticksAverage to enable testing of lag on the server. 20 ticks should occur per second.
  */
 function ticksPerSecond(){
-	let ticksPerSecond = 1000 * ticksAverage/(Date.now()-startTime)
-	sayInChat(modForTPS,+ ticksPerSecond.toFixed(2))
+	let tps = 1000 * ticksAverage/(Date.now()-startTime)
+	sayInChat(modForTPS,"\u00A74Ticks Per Second: \u00A7f"+tps.toFixed(2))
 }
 /**
  * A function that manages routing and delay processes for the MSPT measurements.
@@ -657,7 +658,7 @@ function msptMiddle(){
 function msptEnd(){
 	msptArray.push(Date.now()-msptStop)
 	let meanStd= meanAndSTD(msptArray)
-	sayInChat(msptMod," average mspt is " +meanStd[1].toFixed(1)+ " standard devation of "+meanStd[0].toFixed(1))
+	sayInChat(msptMod,"\u00A74Average mspt: \u00A7f" +meanStd[1].toFixed(1)+ " \u00A7estandard devation: \u00A7f"+meanStd[0].toFixed(1))
 
 }
 /**
@@ -665,9 +666,9 @@ function msptEnd(){
  * @param (player) moderator The moderator that executed the request
 */
 function getMobsFunction(moderator){
-	sayInChat(moderator, 'Overworld: '+getEntitiesDimension("minecraft:overworld"))
-	sayInChat(moderator, 'Nether: '   +getEntitiesDimension("minecraft:nether"))
-	sayInChat(moderator, 'The End: ' +getEntitiesDimension("minecraft:the_end"))
+	sayInChat(moderator,"\u00A74Overworld: \u00A7f"+getEntitiesDimension("minecraft:overworld"))
+	sayInChat(moderator,"\u00A74Nether: \u00A7f"   +getEntitiesDimension("minecraft:nether"))
+	sayInChat(moderator,"\u00A74The End: \u00A7f" +getEntitiesDimension("minecraft:the_end"))
 	getMobsNearPlayers(moderator)
 	const dimension = world.getDimension("overworld");
 	const worldEntities = dimension.getEntities()
@@ -724,8 +725,8 @@ function getMobsFunction(moderator){
 	for (const [name, count] of Object.entries(globalEntityTypes)) {
 		mobsPrint=mobsPrint+' '+count+'x'+name+', '
 	}
-	sayInChat(moderator, 'Global: '+mobsPrint)
-	sayInChat(moderator, 'Global: '+mobCap)
+	sayInChat(moderator, '\u00A7eGlobal: \u00A7f'+mobsPrint)
+	sayInChat(moderator, '\u00A7eGlobal Mob Cap: \u00A7f'+mobCap)
 }
 /**
  * returns a print statemnt for a dimension 
@@ -773,7 +774,7 @@ function getMobsNearPlayers(moderator){
 		for (const [name, count] of Object.entries(playerEntityTypes)) {
 			mobsPrint=mobsPrint+' '+count+'x'+name+', '
 		}
-		sayInChat(moderator, player.name+": "+mobsPrint)
+		sayInChat(moderator, "\u00A74"+player.name+": \u00A7f"+mobsPrint)
 	}
 }
 
@@ -788,7 +789,7 @@ function ticksPerSecondRepeat(){
 	if ("tps" in activeMonitors){
 		let ticksPerSecond = 1000 * ticksAverage/(Date.now()-activeMonitors["tps"]["startTime"])
 		for (let key in activeMonitors["tps"]["users"]) {
-			sayInChat(activeMonitors["tps"]["users"][key],ticksPerSecond.toFixed(2))
+			sayInChat(activeMonitors["tps"]["users"][key],"\u00A74 Ticks Per Second: \u00A7f" + ticksPerSecond.toFixed(2))
 		}
 		activeMonitors["tps"]["startTime"]=Date.now()
 	}
@@ -801,7 +802,7 @@ function repeatMonitorPlayer(){
 		for (let moderatorName in activeMonitors["loc"]["moderator"]){ 
 			let player = activeMonitors["loc"]["moderator"][moderatorName]["player"]
 			let moderator = activeMonitors["loc"]["moderator"][moderatorName]["moderator"]
-			let playerLoc = player.name + ": " + player.dimension.id + " " + player.location.x.toFixed(0)+", " + player.location.y.toFixed(0)+", " + player.location.z.toFixed(0)
+			let playerLoc = "\u00A74" + player.name + ": \u00A7a" + player.dimension.id + " \u00A7f" + player.location.x.toFixed(0)+", " + player.location.y.toFixed(0)+", " + player.location.z.toFixed(0)
 			sayInChat(moderator, playerLoc)
 		}
 
@@ -815,7 +816,7 @@ function repeatMonitorPlayerInv(){
 		for (let moderatorName in activeMonitors["inv"]["moderator"]){ 
 			let player = activeMonitors["inv"]["moderator"][moderatorName]["player"]
 			let moderator = activeMonitors["inv"]["moderator"][moderatorName]["moderator"]
-			let inventory_text = player.name+": "
+			let inventory_text = "\u00A74" + player.name+": \u00A7f"
 			let inventory = player.getComponent("inventory");
 			for (let slot = 0; slot<36;slot++){
 				let itemStack = inventory.container.getItem(slot);
