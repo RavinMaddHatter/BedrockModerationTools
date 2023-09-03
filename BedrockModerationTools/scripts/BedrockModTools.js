@@ -2,27 +2,6 @@ import { world, system } from '@minecraft/server';
 import {ActionFormData, ModalFormData,MessageFormData } from "@minecraft/server-ui";
 
 //////////////////////////////
-////// Static Forms //////////
-//////////////////////////////
-
-const allowListform = new ModalFormData()
-  .title("Administration Tools")
-  .textField("Username","enter user name")
-  .dropdown("opperation",["Add","Remove"],0)
-  
-
-const teleport = new ModalFormData()
-  .title("Allow List Menu")
-  .textField("X","location X")
-  .textField("Y","location Y")
-  .textField("Z","location Z")
-  
-
- 
-const monitorRateForm = new ModalFormData()
-  .title("Set Monitor Rate")
-  .textField("Monitor Rate ","Seconds")
-//////////////////////////////
 //////// Globals /////////////
 //////////////////////////////
 
@@ -37,7 +16,20 @@ var msptStop=0
 var msptArray=[]
 var msptCounter=0
 var monitorRate=20
-	
+
+
+//////////////////////////////
+////// Static Forms //////////
+//////////////////////////////
+
+const allowListform = new ModalFormData()
+  .title("Administration Tools")
+  .textField("Username","enter user name")
+  .dropdown("opperation",["Add","Remove"],0)
+  
+const monitorRateForm = new ModalFormData()
+  .title("Set Monitor Rate")
+  .textField("Monitor Rate ","Seconds")
 
 //////////////////////////////
 ////// Subscriptions /////////
@@ -56,7 +48,7 @@ world.afterEvents.itemUse.subscribe(event => {
 		if(event.source.hasTag("teleport")||event.source.hasTag("effects")||event.source.hasTag("spectatorOkay")||event.source.hasTag("root")){
 			buttons.push("Effects/TP")
 		}
-		if(event.source.hasTag("mod")||event.source.hasTag("inspect")||event.source.hasTag("teleport")||event.source.hasTag("spectatorOkay")||event.source.hasTag("root")){
+		if(event.source.hasTag("mod")||event.source.hasTag("inspect")||event.source.hasTag("root")){
 			buttons.push("Inspect")
 		}
 		if(event.source.hasTag("monitor")||event.source.hasTag("root")){
@@ -66,8 +58,8 @@ world.afterEvents.itemUse.subscribe(event => {
 			buttons.push("Administrate")
 		}
 		let mainForm = new ActionFormData()
-		mainForm.title("Moderator Tools")
-		mainForm.body("What do you need")
+		mainForm.title("Tools")
+		mainForm.body("What tool Category do you want?")
 		for (const text of buttons){
 			mainForm.button(text)
 		}
@@ -96,9 +88,7 @@ world.afterEvents.itemUse.subscribe(event => {
 function openEffectsForm(moderator){
 	let effectsForm = new ActionFormData()
 	let buttons = []
-	effectsForm.title("Effect Tools")
-	effectsForm.body("What do you need")
-	
+	effectsForm.title("Effect/TP Tools")	
 	if(moderator.hasTag("spectatorOkay")||moderator.hasTag("root")){
 		buttons.push("Spectator")
 	}
@@ -145,7 +135,6 @@ function openInspect(moderator){
 	let inspectForm = new ActionFormData()
 	let buttons = []
 	inspectForm.title("Inspection Tools")
-	inspectForm.body("What do you need")
 	if(moderator.hasTag("mod")||moderator.hasTag("root")){
 		buttons.push("Ticks Per Second")
 		buttons.push("MSPT")
@@ -196,7 +185,6 @@ function openMonitor(moderator){
 	let buttons=[]
 	let monitorForm = new ActionFormData()
 	monitorForm.title("Monitoring Tools")
-	monitorForm.body("What do you need")
 	buttons.push("Ticks per Second")
 	if(moderator.hasTag("inspect")||moderator.hasTag("root")){
 		buttons.push("Player Position")
@@ -245,7 +233,6 @@ function openAdmin(moderator){
 	let buttons=[]
 	let adminForm = new ActionFormData()
 	adminForm.title("Administration Tools")
-	adminForm.body("What do you need")
 	if(moderator.hasTag("admin")||moderator.hasTag("root")){
 		buttons.push("Kick")
 	}
@@ -422,7 +409,7 @@ function monitorPlayerLocationForm(moderator){
 		playerHandle[players[i].name]=players[i]
 	}
 	monitorLocForm.dropdown("Player",names)
-	monitorLocForm.title("Monitor Player")
+	monitorLocForm.title("Monitor Player Location")
 	monitorLocForm.show(moderator).then((r)=>{
 		if (r.canceled) return;
 		let [player, reason] = r.formValues;
@@ -461,7 +448,7 @@ function monitorPlayerInvForm(moderator){
 		names.push(players[i].name)
 		playerHandle[players[i].name]=players[i]
 	}
-	monPlayerInvForm.title("Monitor Player")
+	monPlayerInvForm.title("Monitor Player Inventory")
 	monPlayerInvForm.dropdown("Player",names)
 	monPlayerInvForm.show(moderator).then((r)=>{
 		if (r.canceled) return;
@@ -494,6 +481,7 @@ function monitorPlayerInvForm(moderator){
  */
 function tpToPlayerShow(moderator){
 	let tpForm = new ModalFormData;
+	tpForm.title("Teleport To Player")
 	let names = world.getPlayers().map((player) => player.name);
 	tpForm.dropdown("Player",names)
 	tpForm.show(moderator).then((r)=>{
@@ -506,6 +494,7 @@ function tpToPlayerShow(moderator){
 function stealthTpToPlayerShow(moderator){
 	let tpForm = new ModalFormData;
 	let names = world.getPlayers().map((player) => player.name);
+	tpForm.title("Stealth Teleport To Player")
 	tpForm.dropdown("Player",names)
 	tpForm.show(moderator).then((r)=>{
 		if (r.canceled) return;
@@ -541,11 +530,19 @@ function allowListAdd(moderator){
  * @param (player) moderator The moderator that executed the request
  */
 function teleportFunction(moderator){
+	let dims= ["Overworld", "Nether", "The End"]
+	let teleport = new ModalFormData()
+	  .title("Teleport Menu")
+	  //.dropdown("Dimension",dims,0)
+	  .textField("X","location X",moderator.location.x.toFixed(2))
+	  .textField("Y","location Y",moderator.location.y.toFixed(2))
+	  .textField("Z","location Z",moderator.location.z.toFixed(2))
 	teleport.show(moderator).then((r)=>{
 		if (r.canceled) return;
-		let [x, y, z] = r.formValues;
+		let [ x, y, z] = r.formValues;
+		
 		if (isNumeric(x) && isNumeric(y) && isNumeric(z)){
-			moderator.runCommandAsync("tp @s " + x + " " + y + " "+ z + " ")
+			moderator.teleport({x:parseFloat(x),y:parseFloat(y),z:parseFloat(z)})
 		}
 	});
 }
@@ -554,7 +551,7 @@ function teleportFunction(moderator){
  * @param (player) moderator The moderator that executed the request
  */
 function setMonitorRateForm(moderator){
-	monitorRateForm.then((r)=>{
+	monitorRateForm.then((r)=>{ 
 		if (r.canceled) return;
 		let [seconds] = r.formValues;
 		if (isNumeric(seconds)){
@@ -578,7 +575,7 @@ function getPlayerLocation(moderator){
 	for (let i = 0; i < players.length; i++){
 		playerLoc = players[i].name + ": " + players[i].dimension.id + " " + players[i].location.x.toFixed(0)+", " + players[i].location.y.toFixed(0)+", " + players[i].location.z.toFixed(0)
 		
-		moderator.runCommandAsync("w @s " + playerLoc)
+		sayInChat(moderator, playerLoc)
 	}
 }
 /**
@@ -617,8 +614,7 @@ function getInventories(moderator){
 				inventory_text+=itemStack.type.id + ", "; 
 			}
 		}
-		inventory_text=inventory_text.split("minecraft:").join("")
-		moderator.runCommandAsync("w @s " + inventory_text)
+		sayInChat(moderator,inventory_text)
 	}
 	
 }
@@ -627,7 +623,7 @@ function getInventories(moderator){
  */
 function ticksPerSecond(){
 	let ticksPerSecond = 1000 * ticksAverage/(Date.now()-startTime)
-	modForTPS.runCommandAsync("w @s " + ticksPerSecond.toFixed(2))
+	sayInChat(modForTPS,+ ticksPerSecond.toFixed(2))
 }
 /**
  * A function that manages routing and delay processes for the MSPT measurements.
@@ -661,7 +657,7 @@ function msptMiddle(){
 function msptEnd(){
 	msptArray.push(Date.now()-msptStop)
 	let meanStd= meanAndSTD(msptArray)
-	msptMod.runCommandAsync("w @s average mspt is " +meanStd[1].toFixed(1)+ " standard devation of "+meanStd[0].toFixed(1))
+	sayInChat(msptMod," average mspt is " +meanStd[1].toFixed(1)+ " standard devation of "+meanStd[0].toFixed(1))
 
 }
 /**
@@ -669,10 +665,67 @@ function msptEnd(){
  * @param (player) moderator The moderator that executed the request
 */
 function getMobsFunction(moderator){
-	moderator.runCommandAsync('w @s Overworld: '+getEntitiesDimension("minecraft:overworld"))
-	moderator.runCommandAsync('w @s Nether: '+getEntitiesDimension("minecraft:nether"))
-	moderator.runCommandAsync('w @s The End: '+getEntitiesDimension("minecraft:the_end"))
+	sayInChat(moderator, 'Overworld: '+getEntitiesDimension("minecraft:overworld"))
+	sayInChat(moderator, 'Nether: '   +getEntitiesDimension("minecraft:nether"))
+	sayInChat(moderator, 'The End: ' +getEntitiesDimension("minecraft:the_end"))
 	getMobsNearPlayers(moderator)
+	const dimension = world.getDimension("overworld");
+	const worldEntities = dimension.getEntities()
+	let globalEntityTypes={}
+	let mobCap=0
+	let globalCapCount=true
+	for(const entity of worldEntities){
+		if(!(entity.typeId in globalEntityTypes)){
+			globalEntityTypes[entity.typeId] = 0		}
+		globalEntityTypes[entity.typeId]++
+		globalCapCount = entity.typeId!="minecraft:player"
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:villager_v2")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:item")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:snow_golem")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:iron_golem")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:boat")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:chest_boat")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:warden")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:wither")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:xp_orb")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:minecart")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:hopper_minecart")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:tnt_minecart")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:chest_minecart")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:shulker")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:allay")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:evocation_illager")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:evocation_fang")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:vindicator")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:pillager")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:ravager")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:elder_guardian")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:elder_guardian_ghost")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:ender_crystal")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:ender_dragon")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:ender_mite")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:arrow")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:fireworks_rocket")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:egg")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:leash_knot")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:lightning_bolt")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:npc")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:sniffer")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:snowball")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:splash_potion")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:tnt")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:vex")
+		globalCapCount = globalCapCount && (entity.typeId!="minecraft:piglin_brute")
+		if (globalCapCount){
+			mobCap++
+		}
+	}
+	let mobsPrint=""
+	for (const [name, count] of Object.entries(globalEntityTypes)) {
+		mobsPrint=mobsPrint+' '+count+'x'+name+', '
+	}
+	sayInChat(moderator, 'Global: '+mobsPrint)
+	sayInChat(moderator, 'Global: '+mobCap)
 }
 /**
  * returns a print statemnt for a dimension 
@@ -693,7 +746,6 @@ function getEntitiesDimension(dim){
 	for (const [name, count] of Object.entries(dimensionEntityTypes)) {
 		dimensionPrint=dimensionPrint+' '+count+'x'+name+', '
 	}
-	dimensionPrint=dimensionPrint.split("minecraft:").join("")
 	return dimensionPrint;
 }
 /**
@@ -721,8 +773,7 @@ function getMobsNearPlayers(moderator){
 		for (const [name, count] of Object.entries(playerEntityTypes)) {
 			mobsPrint=mobsPrint+' '+count+'x'+name+', '
 		}
-		mobsPrint=mobsPrint.split("minecraft:").join("")
-		moderator.runCommandAsync("w @s " + player.name+": "+mobsPrint)
+		sayInChat(moderator, player.name+": "+mobsPrint)
 	}
 }
 
@@ -737,7 +788,7 @@ function ticksPerSecondRepeat(){
 	if ("tps" in activeMonitors){
 		let ticksPerSecond = 1000 * ticksAverage/(Date.now()-activeMonitors["tps"]["startTime"])
 		for (let key in activeMonitors["tps"]["users"]) {
-			activeMonitors["tps"]["users"][key].runCommandAsync("w @s " + ticksPerSecond.toFixed(2))
+			sayInChat(activeMonitors["tps"]["users"][key],ticksPerSecond.toFixed(2))
 		}
 		activeMonitors["tps"]["startTime"]=Date.now()
 	}
@@ -751,7 +802,7 @@ function repeatMonitorPlayer(){
 			let player = activeMonitors["loc"]["moderator"][moderatorName]["player"]
 			let moderator = activeMonitors["loc"]["moderator"][moderatorName]["moderator"]
 			let playerLoc = player.name + ": " + player.dimension.id + " " + player.location.x.toFixed(0)+", " + player.location.y.toFixed(0)+", " + player.location.z.toFixed(0)
-			moderator.runCommandAsync("w @s " + playerLoc)
+			sayInChat(moderator, playerLoc)
 		}
 
 	}
@@ -772,8 +823,7 @@ function repeatMonitorPlayerInv(){
 					inventory_text+=itemStack.type.id + ", "; 
 				}
 			}
-			inventory_text=inventory_text.split("minecraft:").join("")
-			moderator.runCommandAsync("w @s " + inventory_text)
+			sayInChat(moderator, inventory_text)
 
 		}
 
@@ -818,4 +868,8 @@ function  meanAndSTD(arr){
  
     // Returning the standard deviation
     return [Math.sqrt(sum / arr.length),mean]
+}
+function sayInChat(target,text){
+	text=text.split("minecraft:").join("")
+	target.runCommandAsync('tellraw @s {"rawtext":[{"text":"'+text+'"}]}')
 }
