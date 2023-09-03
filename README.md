@@ -6,7 +6,7 @@ In an effort to comply with Minecraft TOS this pack aslo adds the splash screen 
 
 ## documentation
 Documentation of this pack is completed in the Wiki.
-[Link to the Wiki](https://github.com/RavinMaddHatter/BedrockModerationTools/wiki/Bedrock-Moderation-Tools-Wiki)
+[Link to the Wiki](https://github.com/RavinMaddHatter/BedrockModerationTools/wiki)
 
 ## Download
 
