@@ -43,47 +43,79 @@ world.afterEvents.playerSpawn.subscribe(event =>{
 });
 
 world.afterEvents.itemUse.subscribe(event => {
-	if (event.itemStack.typeId === "minecraft:stick" && event.itemStack.nameTag === "menu" && (event.source.hasTag("menuAccess")||event.source.hasTag("root"))) {
-		let buttons = []
-		if(event.source.hasTag("teleport")||event.source.hasTag("effects")||event.source.hasTag("spectatorOkay")||event.source.hasTag("root")){
-			buttons.push("Effects/TP")
+	let moderator = event.source
+	if (event.itemStack.typeId === "minecraft:stick" && (moderator.hasTag("menuAccess")||moderator.hasTag("root"))){
+		
+		switch(event.itemStack.nameTag){
+			case "menu":
+				openMainMenu(moderator)
+				break;
+			case "tps":
+				sayInChat(moderator,"\u00A74Running Ticks Per second....")
+				modForTPS=moderator;
+				startTime = Date.now();
+				system.runTimeout(ticksPerSecond,ticksAverage);
+				break;
+			case "mspt":
+				sayInChat(moderator,"\u00A74Running Milliseconds Per Tick....")
+				msptStart=Date.now()
+				msptStop=Date.now()
+				msptCounter=0;
+				msptArray=[];
+				msptMod=moderator;
+				msptRouter();
+				break;
+			case "mobs":
+				sayInChat(moderator,"\u00A74Running Mob Query....")
+				getMobsFunction(moderator);
+				break;
+			default:
+				break;
 		}
-		if(event.source.hasTag("mod")||event.source.hasTag("inspect")||event.source.hasTag("root")){
-			buttons.push("Inspect")
-		}
-		if(event.source.hasTag("monitor")||event.source.hasTag("root")){
-			buttons.push("Monitor")
-		}
-		if(event.source.hasTag("admin")||event.source.hasTag("allowList")||event.source.hasTag("root")){
-			buttons.push("Administrate")
-		}
-		let mainForm = new ActionFormData()
-		mainForm.title("Tools")
-		mainForm.body("What tool Category do you want?")
-		for (const text of buttons){
-			mainForm.button(text)
-		}
-		let nextForm = 99;
-		mainForm.show(event.source).then((response) => {
-			switch(buttons[response.selection]){
-				case "Effects/TP":
-					openEffectsForm(event.source)
-					break;
-				case "Inspect"://Inspect
-					openInspect(event.source)
-					break;
-				case "Monitor"://Monitor
-					openMonitor(event.source)
-					break;
-				case "Administrate"://Admin
-					openAdmin(event.source)
-					break;
-				default:
-					break;
-				}
-		});
 	}
 });
+
+function openMainMenu(moderator){
+	let buttons = []
+	if(moderator.hasTag("teleport")||moderator.hasTag("effects")||moderator.hasTag("spectatorOkay")||moderator.hasTag("root")){
+		buttons.push("Effects/TP")
+	}
+	if(moderator.hasTag("mod")||moderator.hasTag("inspect")||moderator.hasTag("root")){
+		buttons.push("Inspect")
+	}
+	if(moderator.hasTag("monitor")||moderator.hasTag("root")){
+		buttons.push("Monitor")
+	}
+	if(moderator.hasTag("admin")||moderator.hasTag("allowList")||moderator.hasTag("root")){
+		buttons.push("Administrate")
+	}
+	let mainForm = new ActionFormData()
+	mainForm.title("Tools")
+	mainForm.body("What tool Category do you want?")
+	for (const text of buttons){
+		mainForm.button(text)
+	}
+	let nextForm = 99;
+	mainForm.show(moderator).then((response) => {
+		switch(buttons[response.selection]){
+			case "Effects/TP":
+				openEffectsForm(moderator)
+				break;
+			case "Inspect"://Inspect
+				openInspect(moderator)
+				break;
+			case "Monitor"://Monitor
+				openMonitor(moderator)
+				break;
+			case "Administrate"://Admin
+				openAdmin(moderator)
+				break;
+			default:
+				break;
+			}
+	});
+
+}
 
 function openEffectsForm(moderator){
 	let effectsForm = new ActionFormData()
@@ -666,95 +698,69 @@ function msptEnd(){
  * @param (player) moderator The moderator that executed the request
 */
 function getMobsFunction(moderator){
-	sayInChat(moderator,"\u00A74Overworld: \u00A7f"+getEntitiesDimension("minecraft:overworld"))
-	sayInChat(moderator,"\u00A74Nether: \u00A7f"   +getEntitiesDimension("minecraft:nether"))
-	sayInChat(moderator,"\u00A74The End: \u00A7f" +getEntitiesDimension("minecraft:the_end"))
-	getMobsNearPlayers(moderator)
-	const dimension = world.getDimension("overworld");
-	const worldEntities = dimension.getEntities()
-	let globalEntityTypes={}
-	let mobCap=0
-	let globalCapCount=true
-	for(const entity of worldEntities){
-		if(!(entity.typeId in globalEntityTypes)){
-			globalEntityTypes[entity.typeId] = 0		}
-		globalEntityTypes[entity.typeId]++
-		globalCapCount = entity.typeId!="minecraft:player"
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:villager_v2")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:item")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:snow_golem")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:iron_golem")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:boat")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:chest_boat")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:warden")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:wither")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:xp_orb")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:minecart")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:hopper_minecart")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:tnt_minecart")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:chest_minecart")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:shulker")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:allay")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:evocation_illager")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:evocation_fang")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:vindicator")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:pillager")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:ravager")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:elder_guardian")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:elder_guardian_ghost")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:ender_crystal")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:ender_dragon")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:ender_mite")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:arrow")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:fireworks_rocket")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:egg")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:leash_knot")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:lightning_bolt")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:npc")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:sniffer")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:snowball")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:splash_potion")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:tnt")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:vex")
-		globalCapCount = globalCapCount && (entity.typeId!="minecraft:piglin_brute")
-		if (globalCapCount){
-			mobCap++
+
+	let [globalMobs,overworldMobs,netherMobs,endMobs] = getMobsNearPlayers(moderator)
+	let overworldPrint = ""
+	let netherPrint = ""
+	let endPrint = ""
+	let globalPrint = ""
+	let globalCap = 0
+	let overworldCount = 0
+	let netherCount=0
+	let endCount=0
+	for (const [name, count] of Object.entries(overworldMobs)) {
+		if(overworldCount>0){
+			overworldPrint += ", "
 		}
+		overworldPrint = overworldPrint + ' ' + count + 'x'+name
+		overworldCount += count
 	}
-	let mobsPrint=""
-	for (const [name, count] of Object.entries(globalEntityTypes)) {
-		mobsPrint=mobsPrint+' '+count+'x'+name+', '
-	}
-	sayInChat(moderator, '\u00A7eGlobal: \u00A7f'+mobsPrint)
-	sayInChat(moderator, '\u00A7eGlobal Mob Cap: \u00A7f'+mobCap)
-}
-/**
- * returns a print statemnt for a dimension 
- * @param (dim) Dimension ID such as "minecraft:overworld"
-*/
-function getEntitiesDimension(dim){
-	const dimension = world.getDimension(dim);
-	const dimensionEntities = dimension.getEntities()
-	let dimensionEntityTypes={}
-	for(const entity of dimensionEntities){
-		if (entity.dimension.id ===dim){
-			if(!(entity.typeId in dimensionEntityTypes)){
-				dimensionEntityTypes[entity.typeId] = 0		}
-			dimensionEntityTypes[entity.typeId]++
+	for (const [name, count] of Object.entries(netherMobs)) {
+		if(netherCount>0){
+			netherPrint += ", "
 		}
+		netherPrint = netherPrint + ' ' + count+'x' + name
+		netherCount += count
 	}
-	let dimensionPrint=""
-	for (const [name, count] of Object.entries(dimensionEntityTypes)) {
-		dimensionPrint=dimensionPrint+' '+count+'x'+name+', '
+	for (const [name, count] of Object.entries(endMobs)) {
+		if(endCount>0){
+			endPrint += ", "
+		}
+		endPrint = endPrint + ' ' + count + 'x' + name
+		endCount += count
 	}
-	return dimensionPrint;
+	for (const [name, count] of Object.entries(globalMobs)) {
+		if(globalCap>0){
+			globalPrint += ", "
+		}
+		globalPrint = globalPrint + ' ' + count + 'x' + name
+		globalCap += count
+	}
+	if(overworldCount>0){
+		sayInChat(moderator,"\u00A74Overworld: \u00A7f"+ overworldPrint)
+	}
+	if (netherCount>0){
+		sayInChat(moderator,"\u00A74Nether: \u00A7f"   + netherPrint)
+	}
+	if(endCount>0){
+		sayInChat(moderator,"\u00A74The End: \u00A7f"  + endPrint)
+	}
+	sayInChat(moderator, '\u00A76Global: \u00A7f'  + globalPrint)
+	sayInChat(moderator, '\u00A76Global Mob Cap: \u00A7f' + globalCap)
 }
+
 /**
  * Prints all mobs around each player.
  * @param (player) moderator The moderator that executed the request
+ * @return [global,overworld,nether,end] Returns an array of dicts that contain mob count
 */
 function getMobsNearPlayers(moderator){
 	let players = world.getPlayers()
+	let overworldMobs = {}
+	let netherMobs = {}
+	let endMobs = {}
+	let globalMobs = {}
+	let counted = []
 	for(const player of players){
 		const dimension = world.getDimension(player.dimension.id);
 		const dimensionEntities = dimension.getEntities({
@@ -763,19 +769,56 @@ function getMobsNearPlayers(moderator){
 			})
 		let playerEntityTypes={}
 		let mobsPrint=""
+		
 		for(const entity of dimensionEntities){
-			if ((entity.dimension.id ===player.dimension.id) &&(entity.typeId)!="minecraft:player"){
-				if(!(entity.typeId in playerEntityTypes)){
-					playerEntityTypes[entity.typeId] = 0		
+			if(mobcapEntity(entity.typeId)){
+				switch (entity.dimension.id){
+					case "minecraft:overworld":
+						if(!(entity.typeId in overworldMobs)){
+							overworldMobs[entity.typeId] = 0		
+						}
+						overworldMobs[entity.typeId]++
+						break;
+					case "minecraft:nether":
+						if(!(entity.typeId in netherMobs)){
+							netherMobs[entity.typeId] = 0		
+						}
+						netherMobs[entity.typeId]++
+						break;
+					case "minecraft:the_end":
+						if(!(entity.typeId in endMobs)){
+							endMobs[entity.typeId] = 0		
+						}
+						endMobs[entity.typeId]++
+						break;
 				}
-				playerEntityTypes[entity.typeId]++
+				
+				if(!counted.includes(entity.id)){
+					if(!(entity.typeId in globalMobs)){
+						globalMobs[entity.typeId] = 0		
+					}
+					globalMobs[entity.typeId]++
+					counted.push(entity.id)
+				}
+				if (entity.dimension.id === player.dimension.id){
+					if(!(entity.typeId in playerEntityTypes)){
+						playerEntityTypes[entity.typeId] = 0		
+					}
+					playerEntityTypes[entity.typeId]++
+				}
 			}
 		}
+		let playerMobCount = 0
 		for (const [name, count] of Object.entries(playerEntityTypes)) {
-			mobsPrint=mobsPrint+' '+count+'x'+name+', '
+			if(playerMobCount>0){
+				mobsPrint += ", "
+			}
+			mobsPrint=mobsPrint + ' ' + count + 'x' + name
+			playerMobCount += count
 		}
-		sayInChat(moderator, "\u00A74"+player.name+": \u00A7f"+mobsPrint)
+		sayInChat(moderator, "\u00A74" + player.name + ": \u00A7e"+player.dimension.id+" \u00A7f"+mobsPrint)
 	}
+	return [globalMobs,overworldMobs,netherMobs,endMobs]
 }
 
 //////////////////////////////
@@ -873,4 +916,19 @@ function  meanAndSTD(arr){
 function sayInChat(target,text){
 	text=text.split("minecraft:").join("")
 	target.runCommandAsync('tellraw @s {"rawtext":[{"text":"'+text+'"}]}')
+}
+function mobcapEntity(entityType){
+	const excludedEntityTypes= ["minecraft:villager_v2", "minecraft:item", "minecraft:snow_golem", "minecraft:iron_golem", 
+		"minecraft:boat", "minecraft:chest_boat", "minecraft:warden", "minecraft:wither", "minecraft:xp_orb", 
+		"minecraft:minecart", "minecraft:hopper_minecart", "minecraft:tnt_minecart", "minecraft:chest_minecart", 
+		"minecraft:shulker", "minecraft:allay", "minecraft:evocation_illager", "minecraft:evocation_fang", "minecraft:vindicator", 
+		"minecraft:pillager", "minecraft:ravager", "minecraft:elder_guardian", "minecraft:elder_guardian_ghost", 
+		"minecraft:ender_crystal", "minecraft:ender_dragon", "minecraft:endermite", "minecraft:arrow", "minecraft:fireworks_rocket", 
+		"minecraft:egg", "minecraft:leash_knot", "minecraft:lightning_bolt", "minecraft:npc", "minecraft:sniffer", 
+		"minecraft:snowball", "minecraft:splash_potion", "minecraft:tnt", "minecraft:vex", "minecraft:piglin_brute", 
+		"minecraft:mule", "minecraft:trader_llama", "minecraft:wandering_trader", "minecraft:silver_fish", 
+		"minecraft:skeleton_horse", "minecraft:zoglin", "minecraft:camel", "minecraft:armor_stand", "minecraft:falling_block", 
+		"minecraft:thrown_trident", "minecraft:zombie_villager", "minecraft:zombie_villager_v2", "minecraft:zombie_horse", 
+		"minecraft:player", "minecraft:villager"]
+	return !excludedEntityTypes.includes(entityType)
 }
