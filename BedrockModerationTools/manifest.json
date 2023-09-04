@@ -1,33 +1,44 @@
 {
-	"format_version": 2,
-	"header": {
-		"name": "Bedrock Moderation Tools",
-		"description": "A set of moderation tools that allow specifically taged players to be able to execute specific actions in the game",
-		"uuid": "6a62acfe-3a3a-4319-8184-dbf3ef441b1e",
-		"version": [1, 0, 0],
-		"min_engine_version": [1, 20, 0]
-	},
-	"modules": [
-		{
-			"uuid": "927fa702-d59d-4662-b536-e290b7b91e8c",
-			"version": [1, 0, 0],
-			"type": "script",
-			"language": "javascript",
-			"entry": "scripts/BedrockModTools.js"
-		}
-	],
-	"capabilities": [
-		"script_eval"
-	],
-	"dependencies": [
-		{
-			"module_name": "@minecraft/server",
-			"version": "1.4.0-beta"
-		},
-		
-		{
-			"module_name": "@minecraft/server-ui",
-			"version": "1.2.0-beta"
-		}
-	]
+  "format_version": 2,
+  "header": {
+    "name": "Bedrock Moderation Tools",
+    "description": "A set of moderation tools that allow specifically taged players to be able to execute specific actions in the game",
+    "uuid": "31dc9e9d-3018-4c31-803b-651a58332b75",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      20,
+      0
+    ]
+  },
+  "modules": [
+    {
+      "uuid": "998066e1-e47a-49de-b185-16e91f6aff88",
+      "version": [
+        1,
+        0,
+        0
+      ],
+      "type": "script",
+      "language": "javascript",
+      "entry": "scripts/BedrockModTools.js"
+    }
+  ],
+  "capabilities": [
+    "script_eval"
+  ],
+  "dependencies": [
+    {
+      "module_name": "@minecraft/server",
+      "version": "1.4.0-beta"
+    },
+    {
+      "module_name": "@minecraft/server-ui",
+      "version": "1.2.0-beta"
+    }
+  ]
 }
