@@ -39,7 +39,7 @@ const monitorRateForm = new ModalFormData()
 world.afterEvents.playerSpawn.subscribe(event =>{ 
 	removeSpectator(event);
 
-	showSplash(event); 
+	//showSplash(event); 
 });
 
 world.afterEvents.itemUse.subscribe(event => {
