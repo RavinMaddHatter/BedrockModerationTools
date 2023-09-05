@@ -51,23 +51,29 @@ world.afterEvents.itemUse.subscribe(event => {
 				openMainMenu(moderator)
 				break;
 			case "tps":
-				sayInChat(moderator,"\u00A74Running Ticks Per second....")
-				modForTPS=moderator;
-				startTime = Date.now();
-				system.runTimeout(ticksPerSecond,ticksAverage);
+				if(moderator.hasTag("mod")||moderator.hasTag("root")){
+					sayInChat(moderator,"\u00A74Running Ticks Per second....")
+					modForTPS=moderator;
+					startTime = Date.now();
+					system.runTimeout(ticksPerSecond,ticksAverage);
+				}
 				break;
 			case "mspt":
-				sayInChat(moderator,"\u00A74Running Milliseconds Per Tick....")
-				msptStart=Date.now()
-				msptStop=Date.now()
-				msptCounter=0;
-				msptArray=[];
-				msptMod=moderator;
-				msptRouter();
+				if(moderator.hasTag("mod")||moderator.hasTag("root")){
+					sayInChat(moderator,"\u00A74Running Milliseconds Per Tick....")
+					msptStart=Date.now()
+					msptStop=Date.now()
+					msptCounter=0;
+					msptArray=[];
+					msptMod=moderator;
+					msptRouter();
+				}
 				break;
 			case "mobs":
-				sayInChat(moderator,"\u00A74Running Mob Query....")
-				getMobsFunction(moderator);
+				if(moderator.hasTag("inspect")||moderator.hasTag("root")){
+					sayInChat(moderator,"\u00A74Running Mob Query....")
+					getMobsFunction(moderator);
+				}
 				break;
 			default:
 				break;
