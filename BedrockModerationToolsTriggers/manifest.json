@@ -1,0 +1,40 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Bedrock Moderation Tools Triggers",
+    "description": "Due to a bug in 1.20.30 the GUI and triggers must be seperated. The trigger pack will have limited functionality, but can be used on its own. Makes first person root",
+    "uuid": "c5a485cb-c8b6-434b-a8d2-d8d40a554b32",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      20,
+      0
+    ]
+  },
+  "modules": [
+    {
+      "uuid": "80d7a810-d5fe-4516-944c-b940e9daa619",
+      "version": [
+        1,
+        0,
+        0
+      ],
+      "type": "script",
+      "language": "javascript",
+      "entry": "scripts/nonGui.js"
+    }
+  ],
+  "capabilities": [
+    "script_eval"
+  ],
+  "dependencies": [
+    {
+      "module_name": "@minecraft/server",
+      "version": "1.5.0"
+    }
+  ]
+}
