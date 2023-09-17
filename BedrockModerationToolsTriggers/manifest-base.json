@@ -1,9 +1,9 @@
 {
   "format_version": 2,
   "header": {
-    "name": "Bedrock Moderation Tools",
-    "description": "A set of moderation tools that allow specifically taged players to be able to execute specific actions in the game",
-    "uuid": "0ef41479-4882-4ac4-b19a-49115e2eaafc",
+    "name": "Bedrock Moderation Tools Triggers",
+    "description": "Due to a bug in 1.20.30 the GUI and triggers must be seperated. The trigger pack will have limited functionality, but can be used on its own. Makes first person root",
+    "uuid": "aa847672-b891-43ef-8c2b-af59df4edb07",
     "version": [
       1,
       0,
@@ -17,7 +17,7 @@
   },
   "modules": [
     {
-      "uuid": "8cffc9fd-1015-4abf-97d7-9f7cb170b653",
+      "uuid": "84678b91-bd13-49cd-af72-345a7dbead0d",
       "version": [
         1,
         0,
@@ -25,7 +25,7 @@
       ],
       "type": "script",
       "language": "javascript",
-      "entry": "scripts/BedrockModTools.js"
+      "entry": "scripts/nonGui.js"
     }
   ],
   "capabilities": [
@@ -35,10 +35,6 @@
     {
       "module_name": "@minecraft/server",
       "version": "1.5.0"
-    },
-    {
-      "module_name": "@minecraft/server-ui",
-      "version": "1.1.0"
     }
   ]
 }

@@ -2,14 +2,14 @@ import shutil
 import os
 import json
 import uuid
-full_pack_name="Bedrock Moderation Tools-Autostart-BETA"
-no_autostart_pack_name="Bedrock Moderation Tools-Manual Start-BETA"
+full_pack_name="Bedrock Moderation Tools-Auto Start 1.20.40+"
+no_autostart_pack_name="Bedrock Moderation Tools-Manual Start 1.20.40+"
 no_default_admin_description= "A set of moderation tools that allow specifically taged players to be able to execute specific actions in the game. No default admin is given."
-gui_pack_name="Bedrock Moderation Tools-GUI"
 
-trigger_manual_start="Bedrock Moderation Tools-1.20.30 Manual Start"
+gui_pack_name="Bedrock Moderation Tools-1.20.30-GUI"
+trigger_manual_start="Bedrock Moderation Tools-1.20.30-Trigger-Manual Start"
 triggers_no_auto_text="Due to a bug in 1.20.30 the GUI and triggers must be seperated. The trigger pack will have limited functionality, but can be used on its own, Does not automatically make first person Root"
-trigger_auto_start="Bedrock Moderation Tools-1.20.30 Auto Start"
+trigger_auto_start="Bedrock Moderation Tools-1.20.30-Trigger-Auto Start"
 def removeOld():
     if os.path.exists(f'{full_pack_name}.mcpack'):
         os.remove(f'{full_pack_name}.mcpack')
@@ -71,7 +71,7 @@ def packGui(packGUID):
 
 def packTriggerAutostart(guid,depenancyGUID):
     ## pack up Triggers Autostart pack...
-    with open("BedrockModerationToolsTriggers\\manifest.json") as file:
+    with open("BedrockModerationToolsTriggers\\manifest-base.json") as file:
         manifest=json.load(file)
     manifest["modules"][0]["uuid"]= str(uuid.uuid4())
     manifest["header"]["uuid"]= str(guid)
@@ -80,12 +80,13 @@ def packTriggerAutostart(guid,depenancyGUID):
         json.dump(manifest, file, indent=2)  
     shutil.make_archive(f"{trigger_auto_start}", 'zip', "BedrockModerationToolsTriggers")
     os.rename(f'{trigger_auto_start}.zip',f'{trigger_auto_start}.mcpack')
+    os.remove("BedrockModerationToolsTriggers\\manifest.json")
 def packTriggerManualstart(guid,depenancyGUID):
     ## pack up trigger No auto start
     shutil.copytree("BedrockModerationToolsTriggers", "BedrockModerationToolsTriggersTemp")
     shutil.rmtree("BedrockModerationToolsTriggersTemp\\functions")
     shutil.rmtree("BedrockModerationToolsTriggersTemp\\structures")
-    with open("BedrockModerationToolsTriggersTemp\\manifest.json") as file:
+    with open("BedrockModerationToolsTriggersTemp\\manifest-base.json") as file:
         manifest=json.load(file)
     manifest["header"]["name"]="Bedrock Moderation Tools-Manual Start"
     manifest["header"]["description"]=triggers_no_auto_text
