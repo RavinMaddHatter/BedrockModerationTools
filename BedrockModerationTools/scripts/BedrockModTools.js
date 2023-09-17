@@ -590,7 +590,7 @@ function teleportFunction(moderator){
  * @param (player) moderator The moderator that executed the request
  */
 function setMonitorRateForm(moderator){
-	monitorRateForm.then((r)=>{ 
+	monitorRateForm.show(moderator).then((r)=>{ 
 		if (r.canceled) return;
 		let [seconds] = r.formValues;
 		if (isNumeric(seconds)){
