@@ -595,19 +595,7 @@ function removeSpectator(event){
  * @param (player) moderator The moderator that executed the request
 */
 function getInventories(moderator){
-	let players = world.getPlayers();
-	let inventory_text = ""
-	for (let i = 0; i < players.length; i++){
-		inventory_text = "\u00A74"+players[i].name+": \u00A7f"
-		let inventory = players[i].getComponent("inventory");
-		for (let slot = 0; slot<36;slot++){
-			let itemStack = inventory.container.getItem(slot);
-			if(!((typeof itemStack) === 'undefined')){
-				inventory_text+=itemStack.type.id + ", "; 
-			}
-		}
-		sayInChat(moderator,inventory_text)
-	}
+	moderator.addTag("inventory")
 	
 }
 /**
@@ -818,16 +806,8 @@ function repeatMonitorPlayerInv(){
 		for (let moderatorName in activeMonitors["inv"]["moderator"]){ 
 			let player = activeMonitors["inv"]["moderator"][moderatorName]["player"]
 			let moderator = activeMonitors["inv"]["moderator"][moderatorName]["moderator"]
-			let inventory_text = "\u00A74" + player.name+": \u00A7f"
-			let inventory = player.getComponent("inventory");
-			for (let slot = 0; slot<36;slot++){
-				let itemStack = inventory.container.getItem(slot);
-				if(!((typeof itemStack) === 'undefined')){
-					inventory_text+=itemStack.type.id + ", "; 
-				}
-			}
-			sayInChat(moderator, inventory_text)
-
+			moderator.addTag("invMon")
+			player.addTag(moderator.name)
 		}
 
 	}
