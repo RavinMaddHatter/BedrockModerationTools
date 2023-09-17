@@ -30,6 +30,18 @@ function tagChecker(){
 		}
 	}
 }
+//////////////////////////////
+////// Static Forms //////////
+//////////////////////////////
+
+const allowListform = new ModalFormData()
+  .title("Administration Tools")
+  .textField("Username","enter user name")
+  .dropdown("opperation",["Add","Remove"],0)
+  
+const monitorRateForm = new ModalFormData()
+  .title("Set Monitor Rate")
+  .textField("Monitor Rate ","Seconds")
 
 
 
@@ -543,7 +555,7 @@ function teleportFunction(moderator){
  * @param (player) moderator The moderator that executed the request
  */
 function setMonitorRateForm(moderator){
-	monitorRateForm.then((r)=>{ 
+	monitorRateForm.show(moderator).then((r)=>{ 
 		if (r.canceled) return;
 		let [seconds] = r.formValues;
 		if (isNumeric(seconds)){
@@ -715,8 +727,8 @@ function getMobsNearPlayers(moderator){
 			maxDistance: 128,
 			})
 		let playerEntityTypes={}
-		let mobsPrint=""
-		
+		let mobsPrint = ""
+		let playerCap = 0
 		for(const entity of dimensionEntities){
 			if(mobcapEntity(entity.typeId)){
 				switch (entity.dimension.id){
@@ -753,6 +765,7 @@ function getMobsNearPlayers(moderator){
 					}
 					playerEntityTypes[entity.typeId]++
 				}
+				
 			}
 		}
 		let playerMobCount = 0
@@ -763,7 +776,7 @@ function getMobsNearPlayers(moderator){
 			mobsPrint=mobsPrint + ' ' + count + 'x' + name
 			playerMobCount += count
 		}
-		sayInChat(moderator, "\u00A74" + player.name + ": \u00A7e"+player.dimension.id+" \u00A7f"+mobsPrint)
+		sayInChat(moderator, "\u00A74" + player.name+ " \u00A7bTotal:"+playerMobCount+" \u00A7e "+player.dimension.id+" \u00A7atypes: \u00A7f"+mobsPrint )
 	}
 	return [globalMobs,overworldMobs,netherMobs,endMobs]
 }
