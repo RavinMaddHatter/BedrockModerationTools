@@ -3,7 +3,7 @@
   "header": {
     "name": "Bedrock Moderation Tools GUI",
     "description": "Due to a bug in 1.20.30 the GUI and Triggers must be in seperate packs. This pack contains the gui and will not work on its own.",
-    "uuid": "21b147c5-9280-4908-bb40-9b5f15abd127",
+    "uuid": "63017b2e-9ada-41c4-92ea-d9a0d1d43aad",
     "version": [
       1,
       0,
@@ -17,7 +17,7 @@
   },
   "modules": [
     {
-      "uuid": "1295b14c-4276-4e23-8feb-c31552547abc",
+      "uuid": "b6e3a1af-544b-4309-9b9e-2e8c797ec899",
       "version": [
         1,
         0,
