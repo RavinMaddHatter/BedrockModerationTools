@@ -70,7 +70,7 @@ function getInventories(moderator){
 		for (let slot = 0; slot<36;slot++){
 			let itemStack = inventory.container.getItem(slot);
 			if(!((typeof itemStack) === 'undefined')){
-				inventory_text+=itemStack.type.id + ", "; 
+				inventory_text+=itemStack.typeId + ", "; 
 			}
 		}
 		sayInChat(moderator,inventory_text)
@@ -87,7 +87,7 @@ function printTaggedInv(moderator){
 			for (let slot = 0; slot<36;slot++){
 				let itemStack = inventory.container.getItem(slot);
 				if(!((typeof itemStack) === 'undefined')){
-					inventory_text+=itemStack.type.id + ", "; 
+					inventory_text+=itemStack.typeId + ", "; 
 				}
 			}
 			sayInChat(moderator, inventory_text)

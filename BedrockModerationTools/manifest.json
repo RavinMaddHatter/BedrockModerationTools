@@ -3,7 +3,7 @@
   "header": {
     "name": "Bedrock Moderation Tools",
     "description": "A set of moderation tools that allow specifically taged players to be able to execute specific actions in the game",
-    "uuid": "0ef41479-4882-4ac4-b19a-49115e2eaafc",
+    "uuid": "65877d62-7276-4a5a-8cdc-605935c9a5b4",
     "version": [
       1,
       0,
@@ -17,7 +17,7 @@
   },
   "modules": [
     {
-      "uuid": "8cffc9fd-1015-4abf-97d7-9f7cb170b653",
+      "uuid": "7a01ac1f-a341-4e0e-9cf2-8b5c6c3fe6ed",
       "version": [
         1,
         0,
